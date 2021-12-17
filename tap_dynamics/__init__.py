@@ -16,7 +16,6 @@ LOGGER = singer.get_logger()
 
 REQUIRED_CONFIG_KEYS = [
     "start_date",
-    "domain",
     "client_id",
     "client_secret",
     "redirect_uri",
@@ -38,7 +37,7 @@ def do_discover(service):
 
 class DynamicsAuth(requests.auth.AuthBase):
     def __init__(self, config):
-        self.__resource = "https://{}.dynamics.com".format(config["domain"])
+        self.__resource = "https://{}.crm.dynamics.com".format(config["org"])
         self.__client_id = config["client_id"]
         self.__client_secret = config["client_secret"]
         self.__redirect_uri = config["redirect_uri"]
@@ -83,7 +82,7 @@ class DynamicsAuth(requests.auth.AuthBase):
 def main():
     parsed_args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
 
-    url = "https://{}.dynamics.com/api/data/v9.0/".format(parsed_args.config["domain"])
+    url = "https://{}.crm.dynamics.com/api/data/v9.0/".format(parsed_args.config["org"])
 
     service = ODataService(
         url, reflect_entities=True, auth=DynamicsAuth(parsed_args.config)
