@@ -35,7 +35,7 @@ def get_schema(odata_schema):
         json_type = "string"
         json_format = None
 
-        inclusion = "automatic"
+        inclusion = "available"
         if odata_prop["is_primary_key"] == True:
             pks.append(prop_name)
 
