@@ -36,12 +36,14 @@ def do_discover(service):
 
 
 class DynamicsAuth(requests.auth.AuthBase):
-    def __init__(self, config):
-        self.__resource = "https://{}.crm.dynamics.com".format(config["org"])
-        self.__client_id = config["client_id"]
-        self.__client_secret = config["client_secret"]
-        self.__redirect_uri = config["redirect_uri"]
-        self.__refresh_token = config["refresh_token"]
+    def __init__(self, parsed_args):
+        self.__config = parsed_args.config
+        self.__config_path = parsed_args.config_path
+        self.__resource = "https://{}.crm.dynamics.com".format(parsed_args.config["org"])
+        self.__client_id = parsed_args.config["client_id"]
+        self.__client_secret = parsed_args.config["client_secret"]
+        self.__redirect_uri = parsed_args.config["redirect_uri"]
+        self.__refresh_token = parsed_args.config["refresh_token"]
 
         self.__session = requests.Session()
         self.__access_token = None
@@ -67,6 +69,12 @@ class DynamicsAuth(requests.auth.AuthBase):
             data = response.json()
 
             self.__access_token = data["access_token"]
+            self.__config["refresh_token"] = data["refresh_token"]
+            self.__config["expires_in"] = data["expires_in"]
+            self.__config["access_token"] = data["access_token"]
+
+            with open(self.__config_path, "w") as outfile:
+                json.dump(self.__config, outfile, indent=4)
 
             self.__expires_at = datetime.utcnow() + timedelta(
                 seconds=int(data["expires_in"]) - 10
@@ -85,7 +93,7 @@ def main():
     url = "https://{}.crm.dynamics.com/api/data/v9.0/".format(parsed_args.config["org"])
 
     service = ODataService(
-        url, reflect_entities=True, auth=DynamicsAuth(parsed_args.config)
+        url, reflect_entities=True, auth=DynamicsAuth(parsed_args)
     )
     catalog = parsed_args.catalog or do_discover(service)
     if parsed_args.discover:
