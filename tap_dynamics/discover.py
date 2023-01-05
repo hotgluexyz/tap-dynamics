@@ -4,6 +4,7 @@ selected_tables = [
     "accounts",
     "campaigns",
     "leads",
+    "savedqueries",
     "opportunities",
     "contacts",
     "transactioncurrencies",
