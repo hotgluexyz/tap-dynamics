@@ -91,9 +91,9 @@ def main():
     parsed_args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
 
     url = "https://{}.crm.dynamics.com/api/data/v9.0/".format(parsed_args.config["org"])
-
+    auth = DynamicsAuth(parsed_args)
     service = ODataService(
-        url, reflect_entities=True, auth=DynamicsAuth(parsed_args)
+        url, reflect_entities=True, auth=auth 
     )
     catalog = parsed_args.catalog or do_discover(service)
     if parsed_args.discover:

@@ -93,10 +93,68 @@ def sync(service, catalog, state, start_date):
         selected_streams = catalog.streams
     else:
         selected_streams = catalog.get_selected_streams(state)
-
+        
+    
     for stream in selected_streams:
-        mdata = metadata.to_map(stream.metadata)
-        update_current_stream(state, stream.tap_stream_id)
-        sync_stream(service, catalog, state, start_date, stream, mdata)
+        if stream.tap_stream_id == "view_leads":
+            array_of_view_leads = get_views_by_metadata(stream.metadata)
+            
+            for stream_catalog in catalog.streams:
+                if stream_catalog.tap_stream_id == "leads":
+                    stream.metadata = stream_catalog.metadata
+                    stream.schema = stream_catalog.schema
+                    stream.key_properties = stream_catalog.key_properties
+            mdata = metadata.to_map(stream.metadata)
+            stream.views = array_of_view_leads
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream_views(service, catalog, state, start_date, stream, mdata)
+
+                
+           
+        else:  
+            mdata = metadata.to_map(stream.metadata)
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream(service, catalog, state, start_date, stream, mdata)
 
     update_current_stream(state)
+
+
+def get_views_by_metadata(metadata):
+    selected_views = []
+    for metadata_entry in metadata:
+        if metadata_entry.get('metadata').get('selected') == True:
+            if len(metadata_entry.get('breadcrumb')) > 0:
+                view_name = metadata_entry.get('breadcrumb')[1]
+                view_id = view_name.split('_id:')[1]
+                selected_views.append(view_id)
+    return selected_views
+
+def get_leads_by_view(query,array_view_leads):
+    
+    leads = []
+    for view_id in array_view_leads:
+        try:
+            lead = query.raw({'savedQuery': "{}".format(view_id)})
+            leads.append(lead)
+        except:
+            LOGGER.info("View not found: %s", view_id)
+        
+    return leads
+
+
+def sync_stream_views(service, catalog, state, start_date, stream, mdata):
+    stream_name = stream.tap_stream_id
+    last_datetime = get_bookmark(state, stream_name, start_date)
+
+    write_schema(stream)
+
+    max_modified = last_datetime
+
+    entitycls = service.entities['leads']
+    query = service.query(entitycls)
+    leads = get_leads_by_view(query,stream.views)
+    for arr_lead in leads:
+        if len(arr_lead) > 0:
+            for record in arr_lead:
+                singer.write_record(stream.tap_stream_id, record)
+

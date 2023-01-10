@@ -1,4 +1,7 @@
+
 from singer.catalog import Catalog, CatalogEntry, Schema
+from odata import ODataService
+
 
 selected_tables = [
     "accounts",
@@ -81,7 +84,6 @@ def discover(service):
         schema_dict, metadata, pks = get_schema(entity.__odata_schema__)
         metadata.append({"breadcrumb": [], "metadata": {"selected": True}})
         schema = Schema.from_dict(schema_dict)
-
         catalog.streams.append(
             CatalogEntry(
                 stream=entity_name,
@@ -94,5 +96,70 @@ def discover(service):
                 else "FULL_TABLE",
             )
         )
-
+    
+    view_leads_data = get_view_leads(service)
+    view_leads_schema = create_lead_views_schema(view_leads_data)
+    schema = Schema.from_dict(view_leads_schema)
+    metadata = create_metadata_view_leads(view_leads_data)
+    catalog.streams.append(
+            CatalogEntry(
+                stream="view_leads",
+                tap_stream_id="view_leads",
+                key_properties=None,
+                schema=schema,
+                metadata=metadata,
+            )
+        )
+    
+    
     return catalog
+
+
+def get_view_leads(service):
+ 
+    view_leads = service.entities['savedqueries']
+    query = service.query(view_leads)
+    query = query.filter("returnedtypecode eq 'lead'")
+    array_leads = []
+    for lead in query:
+        array_leads.append(lead)
+
+    return array_leads
+
+
+def create_lead_views_schema(array_leads):
+
+    schema = {
+        "stream": "view_leads",
+        "tap_stream_id": "view_leads",
+        "type": ["null", "object"],
+        "additionalProperties": False,
+        "properties": {}
+        
+    }
+
+    for lead in array_leads:
+        schema["properties"][lead.name] = {
+          "type": ["null", "string"]
+        }
+    
+    return schema
+
+def create_metadata_view_leads(array_leads):
+    
+    metadata = [{
+          "breadcrumb": [],
+          "metadata": {
+            "selected": True
+          }}]
+
+    for lead in array_leads:
+        metadata.append(
+            {
+                "breadcrumb": ["properties", lead.name + "\n" + "_id: " + lead.savedqueryid],
+                "metadata": {"inclusion": "available"},
+            }
+          
+        )
+    return metadata
+
