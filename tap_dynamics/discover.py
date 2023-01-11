@@ -133,7 +133,7 @@ def create_lead_views_schema(array_leads):
         "stream": "view_leads",
         "tap_stream_id": "view_leads",
         "type": ["null", "object"],
-        "additionalProperties": False,
+        "additionalProperties": True,
         "properties": {}
         
     }
@@ -156,8 +156,8 @@ def create_metadata_view_leads(array_leads):
     for lead in array_leads:
         metadata.append(
             {
-                "breadcrumb": ["properties", lead.name + "\n" + "_id: " + lead.savedqueryid],
-                "metadata": {"inclusion": "available"},
+                "breadcrumb": ["properties", lead.name],          
+                "metadata": {"inclusion": "available", "view_id": lead.savedqueryid,},
             }
           
         )
