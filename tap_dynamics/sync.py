@@ -93,10 +93,63 @@ def sync(service, catalog, state, start_date):
         selected_streams = catalog.streams
     else:
         selected_streams = catalog.get_selected_streams(state)
-
+        
     for stream in selected_streams:
-        mdata = metadata.to_map(stream.metadata)
-        update_current_stream(state, stream.tap_stream_id)
-        sync_stream(service, catalog, state, start_date, stream, mdata)
+        if stream.tap_stream_id == "view_leads":
+            stream.views = get_views_by_metadata(stream.metadata)
+            for stream_catalog in catalog.streams:
+                if stream_catalog.tap_stream_id == "leads":
+                    stream.metadata = stream_catalog.metadata
+                    stream.schema = stream_catalog.schema
+                    stream.key_properties = stream_catalog.key_properties
+            mdata = metadata.to_map(stream.metadata)
+            stream.schema.additionalProperties = True
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream_views(service, stream)
+
+                        
+        else:  
+            mdata = metadata.to_map(stream.metadata)
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream(service, catalog, state, start_date, stream, mdata)
 
     update_current_stream(state)
+
+
+def get_views_by_metadata(metadata):
+    selected_views = {}
+    for metadata_entry in metadata:
+        if metadata_entry.get('metadata').get('selected') == True:
+            if len(metadata_entry.get('breadcrumb')) > 0:
+                view_name = metadata_entry.get('breadcrumb')[1]
+                view_id = metadata_entry.get('metadata').get('view_id')
+                selected_views[view_name] = view_id
+                
+    return selected_views
+
+def get_leads_by_view(service,dict_view_leads):
+    entitycls = service.entities['leads']
+    query = service.query(entitycls)
+    leads = {}
+    for view_name,view_id in dict_view_leads.items():
+        try:
+            lead = query.raw({'savedQuery': "{}".format(view_id)})
+            leads[view_name]=lead
+        except:
+            LOGGER.info("View not found: %s", view_id)
+        
+    return leads
+
+
+def sync_stream_views(service, stream):
+
+    schema = stream.schema.to_dict()
+      
+    leads = get_leads_by_view(service,stream.views)  
+    for view_lead, leads in leads.items():
+        singer.write_schema(view_lead, schema, stream.key_properties)
+        if len(leads) > 0:
+            for record in leads:
+                if record.get("@odata.etag"):
+                    record.pop("@odata.etag")
+                singer.write_record(view_lead, record)
