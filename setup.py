@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="tap-dynamics",
-    version="0.1.2",
+    version="0.1.3",
     description="Singer.io tap for extracting data from the Microsoft Dynamics 365 API",
     classifiers=["Programming Language :: Python :: 3 :: Only"],
     install_requires=[
