@@ -100,10 +100,9 @@ def sync(service, catalog, state, start_date):
             for stream_catalog in catalog.streams:
                 if stream_catalog.tap_stream_id == "leads":
                     stream.metadata = stream_catalog.metadata
-                    stream.schema = stream_catalog.schema
                     stream.key_properties = stream_catalog.key_properties
             mdata = metadata.to_map(stream.metadata)
-            stream.schema.additionalProperties = True
+           
             update_current_stream(state, stream.tap_stream_id)
             sync_stream_views(service, stream)
 
@@ -143,13 +142,33 @@ def get_leads_by_view(service,dict_view_leads):
 
 def sync_stream_views(service, stream):
 
-    schema = stream.schema.to_dict()
+   
       
-    leads = get_leads_by_view(service,stream.views)  
+    leads = get_leads_by_view(service,stream.views)
+
     for view_lead, leads in leads.items():
-        singer.write_schema(view_lead, schema, stream.key_properties)
+        custom_schema = create_schema_properties(leads)
+        singer.write_schema(view_lead, custom_schema, stream.key_properties)
         if len(leads) > 0:
             for record in leads:
                 if record.get("@odata.etag"):
                     record.pop("@odata.etag")
                 singer.write_record(view_lead, record)
+
+def create_schema_properties(leads):
+    
+    schema ={
+        "properties" : {},
+        "type" :"object",
+        "additionalProperties": True
+    }
+    
+    if len(leads) > 0:
+        for fields in leads:
+            fields.pop("@odata.etag")
+            for field in fields.keys():
+               
+                schema['properties'][field] = {
+                    'type' : ['integer', 'number', 'string', 'null']
+                }
+    return schema
