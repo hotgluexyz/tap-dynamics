@@ -147,13 +147,13 @@ def sync_stream_views(service, stream):
     leads = get_leads_by_view(service,stream.views)
 
     for view_lead, leads in leads.items():
-        custom_schema = create_schema_properties(leads)
+        custom_schema,fields_record = create_schema_properties(leads)
         singer.write_schema(view_lead, custom_schema, stream.key_properties)
         if len(leads) > 0:
             for record in leads:
-                if record.get("@odata.etag"):
-                    record.pop("@odata.etag")
-                singer.write_record(view_lead, record)
+                fields_record.update(record)
+                singer.write_record(view_lead, fields_record)
+                fields_record = {k: None for k in fields_record}
 
 def create_schema_properties(leads):
     
@@ -162,6 +162,8 @@ def create_schema_properties(leads):
         "type" :"object",
         "additionalProperties": True
     }
+
+    fields_record = {}
     
     if len(leads) > 0:
         for fields in leads:
@@ -171,4 +173,5 @@ def create_schema_properties(leads):
                 schema['properties'][field] = {
                     'type' : ['integer', 'number', 'string', 'null']
                 }
-    return schema
+                fields_record[field] = None
+    return schema,fields_record
