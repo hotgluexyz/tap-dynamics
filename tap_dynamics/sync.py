@@ -172,7 +172,3 @@ def create_schema_properties(leads):
                     'type' : ['integer', 'number', 'string', 'null']
                 }
     return schema
-    
-
-    
-    
