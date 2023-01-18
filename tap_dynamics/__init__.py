@@ -36,10 +36,10 @@ def do_discover(service):
 
 
 class DynamicsAuth(requests.auth.AuthBase):
-    def __init__(self, parsed_args):
+    def __init__(self, parsed_args, url):
         self.__config = parsed_args.config
         self.__config_path = parsed_args.config_path
-        self.__resource = "https://{}.crm.dynamics.com".format(parsed_args.config["org"])
+        self.__resource = url
         self.__client_id = parsed_args.config["client_id"]
         self.__client_secret = parsed_args.config["client_secret"]
         self.__redirect_uri = parsed_args.config["redirect_uri"]
@@ -90,11 +90,21 @@ class DynamicsAuth(requests.auth.AuthBase):
 def main():
     parsed_args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
 
-    url = "https://{}.crm.dynamics.com/api/data/v9.0/".format(parsed_args.config["org"])
-    auth = DynamicsAuth(parsed_args)
-    service = ODataService(
-        url, reflect_entities=True, auth=auth 
-    )
+    try:
+        url = "https://{}.crm.dynamics.com".format(parsed_args.config["org"])
+        auth = DynamicsAuth(parsed_args, url)
+        service_url = url + "/api/data/v9.0/"
+        service = ODataService(
+            service_url, reflect_entities=True, auth=auth 
+        )
+    except:
+        url = "https://{}.crm3.dynamics.com".format(parsed_args.config["org"])
+        auth = DynamicsAuth(parsed_args, url)
+        service_url = url + "/api/data/v9.0/"
+        service = ODataService(
+            service_url, reflect_entities=True, auth=auth 
+        )
+
     catalog = parsed_args.catalog or do_discover(service)
     if parsed_args.discover:
         json.dump(catalog.to_dict(), sys.stdout, indent=2)
