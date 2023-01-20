@@ -89,21 +89,16 @@ class DynamicsAuth(requests.auth.AuthBase):
 @singer.utils.handle_top_exception(LOGGER)
 def main():
     parsed_args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
-
-    try:
+   
+    if parsed_args.config.get('full_url'):
+        url = parsed_args.config['full_url']
+    else:
         url = "https://{}.crm.dynamics.com".format(parsed_args.config["org"])
-        auth = DynamicsAuth(parsed_args, url)
-        service_url = url + "/api/data/v9.0/"
-        service = ODataService(
-            service_url, reflect_entities=True, auth=auth 
-        )
-    except:
-        url = "https://{}.crm3.dynamics.com".format(parsed_args.config["org"])
-        auth = DynamicsAuth(parsed_args, url)
-        service_url = url + "/api/data/v9.0/"
-        service = ODataService(
-            service_url, reflect_entities=True, auth=auth 
-        )
+    auth = DynamicsAuth(parsed_args, url)
+    service_url = url + "/api/data/v9.0/"
+    service = ODataService(
+        service_url, reflect_entities=True, auth=auth 
+    )
 
     catalog = parsed_args.catalog or do_discover(service)
     if parsed_args.discover:
