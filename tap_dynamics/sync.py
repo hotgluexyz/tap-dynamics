@@ -104,9 +104,19 @@ def sync(service, catalog, state, start_date):
             mdata = metadata.to_map(stream.metadata)
            
             update_current_stream(state, stream.tap_stream_id)
-            sync_stream_views(service, stream)
-
-                        
+            sync_stream_views('leads',service, stream)
+        
+        elif stream.tap_stream_id == "view_contacts":
+            stream.views = get_views_by_metadata(stream.metadata)
+            for stream_catalog in catalog.streams:
+                if stream_catalog.tap_stream_id == "contacts":
+                    stream.metadata = stream_catalog.metadata
+                    stream.key_properties = stream_catalog.key_properties
+            mdata = metadata.to_map(stream.metadata)
+           
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream_views('contacts',service, stream)
+                     
         else:  
             mdata = metadata.to_map(stream.metadata)
             update_current_stream(state, stream.tap_stream_id)
@@ -126,36 +136,34 @@ def get_views_by_metadata(metadata):
                 
     return selected_views
 
-def get_leads_by_view(service,dict_view_leads):
-    entitycls = service.entities['leads']
+def get_items_by_view(entity,service,views):
+    entitycls = service.entities[entity]
     query = service.query(entitycls)
-    leads = {}
-    for view_name,view_id in dict_view_leads.items():
+    dict_views = {}
+    for view_name,view_id in views.items():
         try:
-            lead = query.raw({'savedQuery': "{}".format(view_id)})
-            leads[view_name]=lead
+            view = query.raw({'savedQuery': "{}".format(view_id)})
+            dict_views[view_name]=view
         except:
             LOGGER.info("View not found: %s", view_id)
         
-    return leads
+    return dict_views
 
 
-def sync_stream_views(service, stream):
-
+def sync_stream_views(entity,service, stream):
    
-      
-    leads = get_leads_by_view(service,stream.views)
+    dict_views = get_items_by_view(entity,service,stream.views)
 
-    for view_lead, leads in leads.items():
-        custom_schema,fields_record = create_schema_properties(leads)
-        singer.write_schema(view_lead, custom_schema, stream.key_properties)
-        if len(leads) > 0:
-            for record in leads:
+    for stream_name, records in dict_views.items():
+        custom_schema,fields_record = create_schema_properties(records)
+        singer.write_schema(stream_name, custom_schema, stream.key_properties)
+        if len(records) > 0:
+            for record in records:
                 fields_record.update(record)
-                singer.write_record(view_lead, fields_record)
+                singer.write_record(stream_name, fields_record)
                 fields_record = {k: None for k in fields_record}
 
-def create_schema_properties(leads):
+def create_schema_properties(records):
     
     schema ={
         "properties" : {},
@@ -165,9 +173,9 @@ def create_schema_properties(leads):
 
     fields_record = {}
     
-    if len(leads) > 0:
-        for fields in leads:
-            fields.pop("@odata.etag")
+    if len(records) > 0:
+        for fields in records:
+            fields.pop("@odata.etag",None)
             for field in fields.keys():
                
                 schema['properties'][field] = {

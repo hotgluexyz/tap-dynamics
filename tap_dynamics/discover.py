@@ -97,55 +97,61 @@ def discover(service):
             )
         )
     
-    view_leads_data = get_view_leads(service)
-    view_leads_schema = create_lead_views_schema(view_leads_data)
-    schema = Schema.from_dict(view_leads_schema)
-    metadata = create_metadata_view_leads(view_leads_data)
+    view_leads_data = get_view_by_service('lead',service) 
     catalog.streams.append(
             CatalogEntry(
                 stream="view_leads",
                 tap_stream_id="view_leads",
                 key_properties=None,
-                schema=schema,
-                metadata=metadata,
+                schema=create_views_schema('view_leads',view_leads_data),
+                metadata=create_metadata_views(view_leads_data),
             )
         )
-    
+    view_contacts_data = get_view_by_service('contact',service) 
+    catalog.streams.append(
+            CatalogEntry(
+                stream="view_contacts",
+                tap_stream_id="view_contacts",
+                key_properties=None,
+                schema=create_views_schema('view_contacts',view_contacts_data),
+                metadata=create_metadata_views(view_contacts_data),
+            )
+        )
     
     return catalog
 
 
-def get_view_leads(service):
+def get_view_by_service(name,service):
  
-    view_leads = service.entities['savedqueries']
-    query = service.query(view_leads)
-    query = query.filter("returnedtypecode eq 'lead'")
-    array_leads = []
-    for lead in query:
-        array_leads.append(lead)
+    view = service.entities['savedqueries']
+    query = service.query(view)
+    query = query.filter(f"returnedtypecode eq '{name}'")
+    array_items = []
+    for item in query:
+        array_items.append(item)
 
-    return array_leads
+    return array_items
 
 
-def create_lead_views_schema(array_leads):
+def create_views_schema(view_name,array_views):
 
     schema = {
-        "stream": "view_leads",
-        "tap_stream_id": "view_leads",
+        "stream": view_name,
+        "tap_stream_id": view_name,
         "type": ["null", "object"],
         "additionalProperties": True,
         "properties": {}
         
     }
 
-    for lead in array_leads:
-        schema["properties"][lead.name] = {
+    for item in array_views:
+        schema["properties"][item.name] = {
           "type": ["null", "string"]
         }
     
-    return schema
+    return Schema.from_dict(schema)
 
-def create_metadata_view_leads(array_leads):
+def create_metadata_views(array_views):
     
     metadata = [{
           "breadcrumb": [],
@@ -153,11 +159,11 @@ def create_metadata_view_leads(array_leads):
             "selected": True
           }}]
 
-    for lead in array_leads:
+    for item in array_views:
         metadata.append(
             {
-                "breadcrumb": ["properties", lead.name],          
-                "metadata": {"inclusion": "available", "view_id": lead.savedqueryid,},
+                "breadcrumb": ["properties", item.name],          
+                "metadata": {"inclusion": "available", "view_id": item.savedqueryid,},
             }
           
         )
