@@ -104,7 +104,17 @@ def sync(service, catalog, state, start_date):
             mdata = metadata.to_map(stream.metadata)
            
             update_current_stream(state, stream.tap_stream_id)
-            sync_stream_views('leads',service, stream)
+            sync_stream_views('savedQuery','leads',service, stream)
+        elif stream.tap_stream_id == "view_personal_leads":
+            stream.views = get_views_by_metadata(stream.metadata)
+            for stream_catalog in catalog.streams:
+                if stream_catalog.tap_stream_id == "leads":
+                    stream.metadata = stream_catalog.metadata
+                    stream.key_properties = stream_catalog.key_properties
+            mdata = metadata.to_map(stream.metadata)
+           
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream_views('userQuery','leads',service, stream)
         
         elif stream.tap_stream_id == "view_contacts":
             stream.views = get_views_by_metadata(stream.metadata)
@@ -115,7 +125,18 @@ def sync(service, catalog, state, start_date):
             mdata = metadata.to_map(stream.metadata)
            
             update_current_stream(state, stream.tap_stream_id)
-            sync_stream_views('contacts',service, stream)
+            sync_stream_views('savedQuery','contacts',service, stream)
+
+        elif stream.tap_stream_id == "view_personal_contacts":
+            stream.views = get_views_by_metadata(stream.metadata)
+            for stream_catalog in catalog.streams:
+                if stream_catalog.tap_stream_id == "contacts":
+                    stream.metadata = stream_catalog.metadata
+                    stream.key_properties = stream_catalog.key_properties
+            mdata = metadata.to_map(stream.metadata)
+           
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream_views('userQuery','contacts',service, stream)
                      
         else:  
             mdata = metadata.to_map(stream.metadata)
@@ -136,13 +157,13 @@ def get_views_by_metadata(metadata):
                 
     return selected_views
 
-def get_items_by_view(entity,service,views):
+def get_items_by_view(query_param,entity,service,views):
     entitycls = service.entities[entity]
     query = service.query(entitycls)
     dict_views = {}
     for view_name,view_id in views.items():
         try:
-            view = query.raw({'savedQuery': "{}".format(view_id)})
+            view = query.raw({query_param: "{}".format(view_id)})
             dict_views[view_name]=view
         except:
             LOGGER.info("View not found: %s", view_id)
@@ -150,9 +171,9 @@ def get_items_by_view(entity,service,views):
     return dict_views
 
 
-def sync_stream_views(entity,service, stream):
+def sync_stream_views(query_param,entity,service, stream):
    
-    dict_views = get_items_by_view(entity,service,stream.views)
+    dict_views = get_items_by_view(query_param,entity,service,stream.views)
 
     for stream_name, records in dict_views.items():
         custom_schema,fields_record = create_schema_properties(records)
