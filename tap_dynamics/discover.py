@@ -8,6 +8,7 @@ selected_tables = [
     "campaigns",
     "leads",
     "savedqueries",
+    "userqueries",
     "opportunities",
     "contacts",
     "transactioncurrencies",
