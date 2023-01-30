@@ -177,11 +177,11 @@ def sync_stream_views(query_param,entity,service, stream):
 
     for stream_name, records in dict_views.items():
         custom_schema,fields_record = create_schema_properties(records)
-        singer.write_schema(stream_name, custom_schema, stream.key_properties)
+        singer.write_schema(f"{stream_name} ({entity})", custom_schema, stream.key_properties)
         if len(records) > 0:
             for record in records:
                 fields_record.update(record)
-                singer.write_record(stream_name, fields_record)
+                singer.write_record(f"{stream_name} ({entity})", fields_record)
                 fields_record = {k: None for k in fields_record}
 
 def create_schema_properties(records):
