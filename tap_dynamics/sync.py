@@ -67,8 +67,6 @@ def sync_stream(service, catalog, state, start_date, stream, mdata):
                 if MODIFIED_DATE_FIELD in dict_record:
                     if dict_record[MODIFIED_DATE_FIELD] > max_modified:
                         max_modified = dict_record[MODIFIED_DATE_FIELD]
-                    else:
-                        continue
 
                 with Transformer() as transformer:
                     dict_record = transformer.transform(dict_record, schema, mdata)
