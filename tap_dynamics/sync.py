@@ -171,10 +171,10 @@ def get_items_by_view(query_param,entity,service,views):
 
 def sync_stream_views(query_param,entity,service, stream):
    
-    dict_views = get_items_by_view(query_param,entity,service,stream.views)
+    dict_views = get_items_by_view(query_param, entity, service, stream.views)
 
     for stream_name, records in dict_views.items():
-        custom_schema,fields_record = create_schema_properties(records)
+        custom_schema, fields_record = create_schema_properties(records)
         singer.write_schema(f"{stream_name} ({entity})", custom_schema, stream.key_properties)
         if len(records) > 0:
             for record in records:
