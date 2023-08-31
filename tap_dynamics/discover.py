@@ -1,36 +1,11 @@
 
 from singer.catalog import Catalog, CatalogEntry, Schema
 from odata import ODataService
+from odata.navproperty import NavigationProperty
 
 
-selected_tables = [
-    "accounts",
-    "campaigns",
-    "leads",
-    "savedqueries",
-    "userqueries",
-    "opportunities",
-    "contacts",
-    "transactioncurrencies",
-    "salesorders",
-    "systemusers",
-    "msdyncrm_linkedinaccounts",
-    "msdyncrm_linkedinactivities",
-    "msdyncrm_linkedincampaigns",
-    "msdyncrm_linkedinconfigurations",
-    "msdyncrm_linkedinfieldmappings",
-    "msdyncrm_linkedinformanswers",
-    "msdyncrm_linkedinformquestions",
-    "msdyncrm_linkedinforms",
-    "msdyncrm_linkedinformsubmissions",
-    "msdyncrm_linkedinleadmatchingstrategies",
-    "msdyncrm_linkedinuserprofile_accountset",
-    "msdyncrm_linkedinuserprofiles",
-    "msdyncrm_msdyncrm_linkedinlms_fieldmappingset",
-]
-
-
-def get_schema(odata_schema):
+def get_schema(entity):
+    odata_schema = entity.__odata_schema__
     json_props = {}
     metadata = []
     pks = []
@@ -59,7 +34,7 @@ def get_schema(odata_schema):
             json_type = "number"
         elif odata_type == "Edm.Boolean":
             json_type = "boolean"
-
+        
         prop_json_schema = {"type": ["null", json_type]}
 
         if json_format:
@@ -76,13 +51,56 @@ def get_schema(odata_schema):
     return json_schema, metadata, pks
 
 
-def discover(service):
-    catalog = Catalog([])
+def get_navigation_properties(entity):
+    odata_schema = entity.__odata_schema__
+    navigation_properties = []
+    for odata_prop in odata_schema.get("navigationProperties", []):
+        prop_name = odata_prop["name"]
+        navigation_properties.append(prop_name)
+    return navigation_properties
 
+
+def discover(service, get_lookup_tables):
+    catalog = Catalog([])
+    selected_tables = [
+        "accounts",
+        "campaigns",
+        "leads",
+        "savedqueries",
+        "userqueries",
+        "opportunities",
+        "contacts",
+        "transactioncurrencies",
+        "salesorders",
+        "systemusers",
+        "msdyncrm_linkedinaccounts",
+        "msdyncrm_linkedinactivities",
+        "msdyncrm_linkedincampaigns",
+        "msdyncrm_linkedinconfigurations",
+        "msdyncrm_linkedinfieldmappings",
+        "msdyncrm_linkedinformanswers",
+        "msdyncrm_linkedinformquestions",
+        "msdyncrm_linkedinforms",
+        "msdyncrm_linkedinformsubmissions",
+        "msdyncrm_linkedinleadmatchingstrategies",
+        "msdyncrm_linkedinuserprofile_accountset",
+        "msdyncrm_linkedinuserprofiles",
+        "msdyncrm_msdyncrm_linkedinlms_fieldmappingset",
+    ]
+
+
+    if get_lookup_tables:
+        extra_tables = []
+        for entity_name in service.entities.keys():
+            if "lkup" in entity_name:
+                extra_tables.append(entity_name)
+        
+        selected_tables += extra_tables
+                    
     for entity_name, entity in service.entities.items():
         if entity_name not in selected_tables:
             continue
-        schema_dict, metadata, pks = get_schema(entity.__odata_schema__)
+        schema_dict, metadata, pks = get_schema(entity)
         metadata.append({"breadcrumb": [], "metadata": {"selected": True}})
         schema = Schema.from_dict(schema_dict)
         catalog.streams.append(
@@ -146,7 +164,7 @@ def discover(service):
     return catalog
 
 
-def get_view_by_service(entity,name,service):
+def get_view_by_service(entity, name, service):
  
     view = service.entities[entity]
     query = service.query(view)

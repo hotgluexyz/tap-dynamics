@@ -23,7 +23,7 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def do_discover(service):
+def do_discover(service, get_lookup_tables):
     LOGGER.info("Testing authentication")
     try:
         pass  ## TODO: test authentication
@@ -31,7 +31,7 @@ def do_discover(service):
         raise Exception("Error testing Dynamics authentication")
 
     LOGGER.info("Starting discover")
-    catalog = discover(service)
+    catalog = discover(service, get_lookup_tables)
     return catalog
 
 
@@ -95,12 +95,17 @@ def main():
     else:
         url = "https://{}.crm.dynamics.com".format(parsed_args.config["org"])
     auth = DynamicsAuth(parsed_args, url)
+    session = requests.Session()
+    session.headers.update({"Prefer": 'odata.include-annotations="*"'})
     service_url = url + "/api/data/v9.0/"
     service = ODataService(
-        service_url, reflect_entities=True, auth=auth 
+        service_url,
+        reflect_entities=True,
+        auth=auth,
+        session = session
     )
-
-    catalog = parsed_args.catalog or do_discover(service)
+    get_lookup_tables = parsed_args.config.get("get_lookup_tables", False)
+    catalog = parsed_args.catalog or do_discover(service, get_lookup_tables)
     if parsed_args.discover:
         json.dump(catalog.to_dict(), sys.stdout, indent=2)
 
