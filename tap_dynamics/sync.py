@@ -213,7 +213,7 @@ def create_schema_properties(records):
             for field in fields.keys():
                
                 schema['properties'][field] = {
-                    'type' : ['integer', 'number', 'string', 'null']
+                    'type' : ['integer', 'number', 'string', 'boolean', 'object', 'array', 'null']
                 }
                 fields_record[field] = None
     return schema,fields_record
