@@ -2,76 +2,22 @@
 from singer.catalog import Catalog, CatalogEntry, Schema
 from odata import ODataService
 from odata.navproperty import NavigationProperty
-
-
-def get_schema(entity):
-    odata_schema = entity.__odata_schema__
-    json_props = {}
-    metadata = []
-    pks = []
-    for odata_prop in odata_schema.get("properties", []):
-        odata_type = odata_prop["type"]
-        prop_name = odata_prop["name"]
-        json_type = "string"
-        json_format = None
-
-        inclusion = "available"
-        if odata_prop["is_primary_key"] == True:
-            pks.append(prop_name)
-
-        metadata.append(
-            {
-                "breadcrumb": ["properties", prop_name],
-                "metadata": {"inclusion": inclusion},
-            }
-        )
-
-        if odata_type in ["Edm.Date", "Edm.DateTime", "Edm.DateTimeOffset"]:
-            json_format = "date-time"
-        elif odata_type in ["Edm.Int16", "Edm.Int32", "Edm.Int64"]:
-            json_type = "integer"
-        elif odata_type in ["Edm.Double", "Edm.Decimal"]:
-            json_type = "number"
-        elif odata_type == "Edm.Boolean":
-            json_type = "boolean"
-        
-        prop_json_schema = {"type": ["null", json_type]}
-
-        if json_format:
-            prop_json_schema["format"] = json_format
-
-        json_props[prop_name] = prop_json_schema
-
-    json_schema = {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": json_props,
-    }
-
-    return json_schema, metadata, pks
-
-
-def get_navigation_properties(entity):
-    odata_schema = entity.__odata_schema__
-    navigation_properties = []
-    for odata_prop in odata_schema.get("navigationProperties", []):
-        prop_name = odata_prop["name"]
-        navigation_properties.append(prop_name)
-    return navigation_properties
+from utils import transform_entity_to_json_schema, get_schema
 
 
 def discover(service, get_lookup_tables):
+    default_formatted_value_name = "OData.Community.Display.V1.FormattedValue"
     catalog = Catalog([])
     selected_tables = [
         "accounts",
         "campaigns",
         "leads",
+        "contacts",
+        "opportunities",
+        "salesorders",
+        "transactioncurrencies",
         "savedqueries",
         "userqueries",
-        "opportunities",
-        "contacts",
-        "transactioncurrencies",
-        "salesorders",
         "systemusers",
         "msdyncrm_linkedinaccounts",
         "msdyncrm_linkedinactivities",
@@ -89,18 +35,36 @@ def discover(service, get_lookup_tables):
     ]
 
 
-    if get_lookup_tables:
-        extra_tables = []
-        for entity_name in service.entities.keys():
-            if "lkup" in entity_name:
-                extra_tables.append(entity_name)
+    # if get_lookup_tables:
+    #     extra_tables = []
+    #     for entity_name in service.entities.keys():
+    #         if "lkup" in entity_name:
+    #             extra_tables.append(entity_name)
         
-        selected_tables += extra_tables
+    #     selected_tables += extra_tables
                     
     for entity_name, entity in service.entities.items():
         if entity_name not in selected_tables:
             continue
         schema_dict, metadata, pks = get_schema(entity)
+        # get table data to get lookup values
+        resp = service.default_context.connection._do_get(f"{service.url}{entity_name}").json()
+        # get the first result and adds and modifies fields with
+        # lookup values
+        try:
+            first = resp["value"][0]
+        except IndexError:
+            first = {}
+        
+
+        possible_choice_fields = []
+        for key in first.keys():
+            if default_formatted_value_name in key and key not in ["createdon", "modifiedon"]:
+                possible_choice_fields.append(key.replace(f"@{default_formatted_value_name}", ""))
+
+        for choice in possible_choice_fields:
+            schema_dict["properties"][choice] = {"type": ["null", "string"]}
+
         metadata.append({"breadcrumb": [], "metadata": {"selected": True}})
         schema = Schema.from_dict(schema_dict)
         catalog.streams.append(
