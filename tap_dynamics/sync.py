@@ -35,7 +35,6 @@ def sync_stream(service, catalog, state, start_date, stream, mdata):
 
     max_modified = last_datetime
 
-    ## TODO: add metrics?
     entitycls = service.entities[stream_name]
     query = service.query(entitycls)
 
@@ -52,17 +51,33 @@ def sync_stream(service, catalog, state, start_date, stream, mdata):
 
     schema = stream.schema.to_dict()
 
+    query_data = query.connection.execute_get(
+        query._get_url(),
+        query._get_options()
+    )
+
+    if "value" not in query_data:
+        LOGGER.info(f"No data found for stream: {stream.tap_stream_id}")
+        return
+    
+    default_formatted_value_name = "@OData.Community.Display.V1.FormattedValue"
     count = 0
     with metrics.http_request_timer(stream.tap_stream_id):
         with metrics.record_counter(stream.tap_stream_id) as counter:
-            for record in query:
+            for record in query_data["value"]:
                 dict_record = {}
-                for odata_prop in entitycls.__odata_schema__["properties"]:
-                    prop_name = odata_prop["name"]
-                    value = getattr(record, prop_name)
+                for field in record.keys():
+                    if field in record.keys() and f"{field}{default_formatted_value_name}" in record.keys():
+                        dict_record[field] = record[f"{field}{default_formatted_value_name}"]
+
+                for field, value in record.items():
+                    if "@" in field:
+                        continue
+                    
                     if isinstance(value, datetime):
                         value = singer.utils.strftime(value)
-                    dict_record[prop_name] = value
+                    
+                    dict_record[field] = value
 
                 if MODIFIED_DATE_FIELD in dict_record:
                     if dict_record[MODIFIED_DATE_FIELD] > max_modified:
@@ -198,7 +213,7 @@ def create_schema_properties(records):
             for field in fields.keys():
                
                 schema['properties'][field] = {
-                    'type' : ['integer', 'number', 'string', 'null']
+                    'type' : ['integer', 'number', 'string', 'boolean', 'object', 'array', 'null']
                 }
                 fields_record[field] = None
     return schema,fields_record
