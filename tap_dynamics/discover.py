@@ -2,7 +2,7 @@
 from singer.catalog import Catalog, CatalogEntry, Schema
 from odata import ODataService
 from odata.navproperty import NavigationProperty
-from utils import transform_entity_to_json_schema, get_schema
+from tap_dynamics.utils import transform_entity_to_json_schema, get_schema
 
 
 def discover(service, get_lookup_tables):
