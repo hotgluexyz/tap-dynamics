@@ -36,7 +36,7 @@ def do_discover(service, get_lookup_tables):
 
 
 class DynamicsAuth(requests.auth.AuthBase):
-    def __init__(self, parsed_args, url):
+    def __init__(self, parsed_args, url, auth_url):
         self.__config = parsed_args.config
         self.__config_path = parsed_args.config_path
         self.__resource = url
@@ -44,6 +44,7 @@ class DynamicsAuth(requests.auth.AuthBase):
         self.__client_secret = parsed_args.config["client_secret"]
         self.__redirect_uri = parsed_args.config["redirect_uri"]
         self.__refresh_token = parsed_args.config["refresh_token"]
+        self.__auth_url = auth_url
 
         self.__session = requests.Session()
         self.__access_token = None
@@ -52,7 +53,7 @@ class DynamicsAuth(requests.auth.AuthBase):
     def ensure_access_token(self):
         if self.__access_token is None or self.__expires_at <= datetime.utcnow():
             response = self.__session.post(
-                "https://login.microsoftonline.com/common/oauth2/token",
+                self.__auth_url,
                 data={
                     "client_id": self.__client_id,
                     "client_secret": self.__client_secret,
@@ -94,10 +95,20 @@ def main():
         url = parsed_args.config['full_url']
     else:
         url = "https://{}.crm.dynamics.com".format(parsed_args.config["org"])
-    auth = DynamicsAuth(parsed_args, url)
+
+    if parsed_args.config.get('auth_url'):
+        auth_url = parsed_args.config['auth_url']
+    else: 
+        auth_url = "https://login.microsoftonline.com/common/oauth2/token"
+
+    auth = DynamicsAuth(parsed_args, url, auth_url)
     session = requests.Session()
     session.headers.update({"Prefer": 'odata.include-annotations="*"'})
-    service_url = url + "/api/data/v9.0/"
+    if  "/api/data/" not in url:
+        service_url = url + "/api/data/v9.0/"
+    else:
+        service_url = url
+        
     service = ODataService(
         service_url,
         reflect_entities=True,
