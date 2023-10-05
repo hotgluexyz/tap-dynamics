@@ -15,11 +15,11 @@ from tap_dynamics.sync import sync
 LOGGER = singer.get_logger()
 
 REQUIRED_CONFIG_KEYS = [
-    "start_date",
+    # "start_date",
     "client_id",
     "client_secret",
-    "redirect_uri",
-    "refresh_token",
+    # "redirect_uri",
+    # "refresh_token",
 ]
 
 
@@ -42,7 +42,7 @@ class DynamicsAuth(requests.auth.AuthBase):
         self.__resource = url
         self.__client_id = parsed_args.config["client_id"]
         self.__client_secret = parsed_args.config["client_secret"]
-        self.__redirect_uri = parsed_args.config["redirect_uri"]
+        self.__redirect_uri = parsed_args.config["redirect_uri"] or https://hotglue.xyz/callback
         self.__refresh_token = parsed_args.config["refresh_token"]
 
         self.__auth_url = auth_url
@@ -136,11 +136,12 @@ def main():
         json.dump(catalog.to_dict(), sys.stdout, indent=2)
 
     else:
+        start_date = parsed_args.config["start_date"] or "2017-09-10"
         sync(
             service,
             catalog,
             parsed_args.state,
-            parsed_args.config["start_date"],
+            start_date,
         )
 
 
