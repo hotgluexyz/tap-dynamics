@@ -45,7 +45,7 @@ class DynamicsAuth(requests.auth.AuthBase):
 
         self.__redirect_uri = parsed_args.config.get("redirect_uri", "https://hotglue.xyz/callback")
 
-        self.__refresh_token = parsed_args.config["refresh_token"]
+        self.__refresh_token = parsed_args.config.get("refresh_token", "")
 
         self.__auth_url = auth_url
         self.__grant_type = parsed_args.config.get("grant_type", "refresh_token")
