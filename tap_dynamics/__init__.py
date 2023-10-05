@@ -42,11 +42,14 @@ class DynamicsAuth(requests.auth.AuthBase):
         self.__resource = url
         self.__client_id = parsed_args.config["client_id"]
         self.__client_secret = parsed_args.config["client_secret"]
-        self.__redirect_uri = parsed_args.config["redirect_uri"] or "https://hotglue.xyz/callback"
+
+        self.__redirect_uri = parsed_args.config.get("redirect_uri", "https://hotglue.xyz/callback")
+
         self.__refresh_token = parsed_args.config["refresh_token"]
 
         self.__auth_url = auth_url
-        self.__grant_type = parsed_args.config["grant_type"] or "refresh_token"
+        self.__grant_type = parsed_args.config.get("grant_type", "refresh_token")
+            
         self.__username = parsed_args.config["username"]
         self.__password = parsed_args.config["password"]
 
@@ -136,7 +139,8 @@ def main():
         json.dump(catalog.to_dict(), sys.stdout, indent=2)
 
     else:
-        start_date = parsed_args.config["start_date"] or "2017-09-10"
+        start_date = parsed_args.config.get("start_date", "2017-09-10")
+            
         sync(
             service,
             catalog,
