@@ -131,7 +131,7 @@ def main():
         reflect_entities=True,
         auth=auth,
         session=session,
-        quiet_progress=True,
+       #  quiet_progress=True, # this is a python-odata only flag, not the library we use
     )
     get_lookup_tables = parsed_args.config.get("get_lookup_tables", False)
     catalog = parsed_args.catalog or do_discover(service, get_lookup_tables)
