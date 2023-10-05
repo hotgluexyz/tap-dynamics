@@ -12,6 +12,7 @@ This tap:
 To run `tap-dynamics` with the configuration file, use this command:
 
 ```sh
+python3 setup.py install
 tap-dynamics -c config.json
 ```
 
