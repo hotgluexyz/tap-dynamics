@@ -51,7 +51,9 @@ class DynamicsAuth(requests.auth.AuthBase):
         self.__grant_type = parsed_args.config.get("grant_type", "refresh_token")
             
         self.__username = parsed_args.config["username"]
+        print(self.__username)
         self.__password = parsed_args.config["password"]
+        print(self.__password)
 
         self.__session = requests.Session()
         self.__access_token = None
