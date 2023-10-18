@@ -139,9 +139,9 @@ def main():
         json.dump(catalog.to_dict(), sys.stdout, indent=2)
 
     else:
-        start_date = parsed_args.config.get("start_date", "2017-09-10")
+        start_date = parsed_args.config.get("start_date", "2022-01-01")
         if start_date is None:
-            start_date = "2017-09-10"
+            start_date = "2022-01-01"
         LOGGER.info(
             "Start date is: {}".format(start_date)
         )
