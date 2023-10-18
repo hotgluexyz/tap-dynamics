@@ -140,6 +140,8 @@ def main():
 
     else:
         start_date = parsed_args.config.get("start_date", "2017-09-10")
+        if start_date is None:
+            start_date = "2017-09-10"
         LOGGER.info(
             "Start date is: {}".format(start_date)
         )
