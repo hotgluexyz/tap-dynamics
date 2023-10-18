@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(
-    name="tap-dynamics-custom",
+    name="tap-ellucian-recruit",
     version="0.1.4",
     description="Singer.io tap for extracting data from the Microsoft Dynamics 365 API",
     classifiers=["Programming Language :: Python :: 3 :: Only"],
@@ -14,7 +14,7 @@ setup(
     ],
     entry_points="""
           [console_scripts]
-          tap-dynamics-custom=tap_dynamics:main
+          tap-ellucian-recruit=tap_dynamics:main
       """,
     packages=["tap_dynamics"],
 )
