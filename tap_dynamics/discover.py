@@ -1,8 +1,10 @@
 
 from singer.catalog import Catalog, CatalogEntry, Schema
+import singer
+
 from odata import ODataService
 from odata.navproperty import NavigationProperty
-
+LOGGER = singer.get_logger()
 
 def get_schema(entity):
     odata_schema = entity.__odata_schema__
@@ -89,7 +91,9 @@ def discover(service, get_lookup_tables):
     ]
 
 
+
     if get_lookup_tables:
+        LOGGER.info("Getting lookup tables")
         extra_tables = []
         for entity_name in service.entities.keys():
             if "lkup" in entity_name:
@@ -98,6 +102,7 @@ def discover(service, get_lookup_tables):
         selected_tables += extra_tables
                     
     for entity_name, entity in service.entities.items():
+        LOGGER.info(f"Getting schema for {entity_name}")
         if entity_name not in selected_tables:
             continue
         schema_dict, metadata, pks = get_schema(entity)
