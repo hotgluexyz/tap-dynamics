@@ -90,7 +90,7 @@ def discover(service, get_lookup_tables):
         "msdyncrm_msdyncrm_linkedinlms_fieldmappingset",
     ]
 
-
+    LOGGER.info("Starting discover")
 
     if get_lookup_tables:
         LOGGER.info("Getting lookup tables")

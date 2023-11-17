@@ -134,6 +134,7 @@ def main():
        #  quiet_progress=True, # this is a python-odata only flag, not the library we use
     )
     get_lookup_tables = parsed_args.config.get("get_lookup_tables", False)
+    LOGGER.info("Discovering catalog")
     catalog = parsed_args.catalog or do_discover(service, get_lookup_tables)
     if parsed_args.discover:
         json.dump(catalog.to_dict(), sys.stdout, indent=2)
