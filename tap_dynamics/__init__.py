@@ -126,6 +126,7 @@ def main():
     else:
         service_url = url
 
+    LOGGER.info("Connecting to {}".format(service_url))
     service = ODataService(
         service_url,
         reflect_entities=True,
