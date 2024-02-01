@@ -182,23 +182,44 @@ def sync_stream_views(query_param,entity,service, stream):
                 singer.write_record(f"{stream_name} ({entity})", fields_record)
                 fields_record = {k: None for k in fields_record}
 
+
+def infer_type(value):
+    if isinstance(value, str):
+        return ["string"]
+    elif isinstance(value, int):
+        return ["integer"]
+    elif isinstance(value, float):
+        return ["number"]
+    elif isinstance(value, bool):
+        return ["boolean"]
+    elif isinstance(value, list):
+        if not value:
+            return ["array", {"items": {"type": ["string"]}}]
+        else:
+            element_type = set()
+            for element in value:
+                element_type.update(infer_type(element))
+            return ["array", {"items": {"type": list(element_type)}}]
+    elif isinstance(value, dict):
+        properties = {}
+        for key, val in value.items():
+            properties[key] = {"type": infer_type(val)}
+        return ["object", {"properties": properties}]
+
+
 def create_schema_properties(records):
-    
-    schema ={
-        "properties" : {},
-        "type" :"object",
-        "additionalProperties": True
-    }
+    schema = {"properties": {}, "type": "object", "additionalProperties": True}
 
     fields_record = {}
-    
+
     if len(records) > 0:
-        for fields in records:
-            fields.pop("@odata.etag",None)
-            for field in fields.keys():
-               
-                schema['properties'][field] = {
-                    'type' : ['integer', 'number', 'string', 'null']
-                }
+        for record in records:
+            record.pop("@odata.etag", None)
+            for field, value in record.items():
+                types = infer_type(value)
+                types.append("null")
                 fields_record[field] = None
-    return schema,fields_record
+                if field not in schema["properties"]:
+                    schema["properties"][field] = {"type": types}
+
+    return schema, fields_record
