@@ -175,6 +175,8 @@ def get_view_by_service(entity, name, service):
 
     return array_items
 
+def clean_view_name(name):
+    return name.replace(' ', '-').replace(':', '-')
 
 def create_views_schema(view_name,array_views):
 
@@ -188,7 +190,7 @@ def create_views_schema(view_name,array_views):
     }
 
     for item in array_views:
-        schema["properties"][item.name] = {
+        schema["properties"][clean_view_name(item.name)] = {
           "type": ["null", "string"]
         }
     
@@ -207,14 +209,14 @@ def create_metadata_views(view_type,array_views):
         if view_type == 'system':
             metadata.append(
                 {
-                    "breadcrumb": ["properties", item.name],          
+                    "breadcrumb": ["properties", clean_view_name(item.name)],          
                     "metadata": {"inclusion": "available", "view_id": item.savedqueryid,},
                 } 
             )
         elif view_type == 'personal':
             metadata.append(
                 {
-                    "breadcrumb": ["properties", item.name],          
+                    "breadcrumb": ["properties", clean_view_name(item.name)],          
                     "metadata": {"inclusion": "available", "view_id": item.userqueryid,},
                 } 
             )
