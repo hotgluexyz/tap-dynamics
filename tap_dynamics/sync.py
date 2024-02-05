@@ -3,7 +3,7 @@ from datetime import datetime
 import singer
 from singer import metrics, metadata, Transformer
 from singer.bookmarks import set_currently_syncing
-
+from datetime import timedelta
 from tap_dynamics.discover import discover
 
 LOGGER = singer.get_logger()
@@ -40,6 +40,9 @@ def sync_stream(service, catalog, state, start_date, stream, mdata):
     query = service.query(entitycls)
 
     if hasattr(entitycls, MODIFIED_DATE_FIELD):
+        # add 1 second to the last_datetime to avoid duplicates
+        last_datetime = singer.utils.strptime_with_tz(last_datetime)
+        last_datetime = (last_datetime + timedelta(seconds=1)).isoformat()
         LOGGER.info(
             "{} - Syncing data since {}".format(stream.tap_stream_id, last_datetime)
         )
@@ -110,10 +113,10 @@ def sync(service, catalog, state, start_date):
                     stream.metadata = stream_catalog.metadata
                     stream.key_properties = stream_catalog.key_properties
             mdata = metadata.to_map(stream.metadata)
-           
+
             update_current_stream(state, stream.tap_stream_id)
-            sync_stream_views('userQuery','leads',service, stream)
-        
+            sync_stream_views('userQuery', 'leads', service, stream)
+
         elif stream.tap_stream_id == "view_contacts":
             stream.views = get_views_by_metadata(stream.metadata)
             for stream_catalog in catalog.streams:
@@ -121,9 +124,9 @@ def sync(service, catalog, state, start_date):
                     stream.metadata = stream_catalog.metadata
                     stream.key_properties = stream_catalog.key_properties
             mdata = metadata.to_map(stream.metadata)
-           
+
             update_current_stream(state, stream.tap_stream_id)
-            sync_stream_views('savedQuery','contacts',service, stream)
+            sync_stream_views('savedQuery','contacts', service, stream)
 
         elif stream.tap_stream_id == "view_personal_contacts":
             stream.views = get_views_by_metadata(stream.metadata)
@@ -132,11 +135,11 @@ def sync(service, catalog, state, start_date):
                     stream.metadata = stream_catalog.metadata
                     stream.key_properties = stream_catalog.key_properties
             mdata = metadata.to_map(stream.metadata)
-           
+
             update_current_stream(state, stream.tap_stream_id)
-            sync_stream_views('userQuery','contacts',service, stream)
-                     
-        else:  
+            sync_stream_views('userQuery','contacts', service, stream)
+
+        else:
             mdata = metadata.to_map(stream.metadata)
             update_current_stream(state, stream.tap_stream_id)
             sync_stream(service, catalog, state, start_date, stream, mdata)
