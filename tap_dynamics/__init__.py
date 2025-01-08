@@ -8,7 +8,6 @@ import requests
 import singer
 from singer import metadata
 from odata import ODataService
-import urllib
 
 from tap_dynamics.discover import discover
 from tap_dynamics.sync import sync
@@ -16,8 +15,11 @@ from tap_dynamics.sync import sync
 LOGGER = singer.get_logger()
 
 REQUIRED_CONFIG_KEYS = [
+    # "start_date",
     "client_id",
     "client_secret",
+    # "redirect_uri",
+    # "refresh_token",
 ]
 
 
@@ -72,24 +74,15 @@ class DynamicsAuth(requests.auth.AuthBase):
                 data["password"] = self.__password
                 data["username"] = self.__username
 
-            data = urllib.parse.urlencode(data)
-            
-
-            LOGGER.info("Authenticating with data: {}".format(data))
-            # form data
             response = self.__session.post(
                 self.__auth_url,
-                headers = {'Content-Type': 'application/x-www-form-urlencoded'},
                 data=data,
             )
-            
-            # LOGGER.info("Response: {}".format(response.text))
 
             if response.status_code != 200:
                 raise Exception(response.text)
 
             data = response.json()
-            LOGGER.info("Data: {}".format(data) )
 
             self.__access_token = data["access_token"]
             self.__config["refresh_token"] = data["refresh_token"]
@@ -111,8 +104,6 @@ class DynamicsAuth(requests.auth.AuthBase):
 
 @singer.utils.handle_top_exception(LOGGER)
 def main():
-    LOGGER.info("Starting tap")
-    print(f"required config keys: {REQUIRED_CONFIG_KEYS}")
     parsed_args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
    
     if parsed_args.config.get('full_url'):
@@ -135,9 +126,7 @@ def main():
     else:
         service_url = url
 
-
     LOGGER.info("Connecting to {}".format(service_url))
-    LOGGER.info("Using auth url {}".format(auth_url))
     service = ODataService(
         service_url,
         reflect_entities=True,

@@ -111,7 +111,6 @@ venv.bak/
 # Custom stuff
 env.sh
 config.json
-unbc.config.json
 test.*.json
 *.txt
 .autoenv.zsh
