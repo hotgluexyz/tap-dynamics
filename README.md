@@ -13,7 +13,19 @@ To run `tap-dynamics` with the configuration file, use this command:
 
 ```sh
 python3 setup.py install
-tap-dynamics -c config.json
+tap-ellucian-recruit -c tap_dynamics/config.json
+```
+
+```sh
+cd tap_dynamics
+python3 __init__.py -c config.json
+```
+
+Changes to setup.py
+
+```"odata @ https://github.com/dreamdata-io/python-odata/archive/master.zip",
++       # "odata @ https://github.com/dreamdata-io/python-odata/archive/master.zip",
++       'python-odata'
 ```
 
 ## Example config
