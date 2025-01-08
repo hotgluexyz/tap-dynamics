@@ -112,7 +112,7 @@ class DynamicsAuth(requests.auth.AuthBase):
 @singer.utils.handle_top_exception(LOGGER)
 def main():
     LOGGER.info("Starting tap")
-    print(f"required config keys: {REQUIRED_CONFIG_KEYS}")
+    LOGGER.info("Parsing args")
     parsed_args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
    
     if parsed_args.config.get('full_url'):
