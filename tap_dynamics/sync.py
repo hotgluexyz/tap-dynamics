@@ -135,6 +135,27 @@ def sync(service, catalog, state, start_date):
            
             update_current_stream(state, stream.tap_stream_id)
             sync_stream_views('userQuery','contacts',service, stream)
+        elif stream.tap_stream_id == "view_opportunities":
+            stream.views = get_views_by_metadata(stream.metadata)
+            for stream_catalog in catalog.streams:
+                if stream_catalog.tap_stream_id == "opportunities":
+                    stream.metadata = stream_catalog.metadata
+                    stream.key_properties = stream_catalog.key_properties
+            mdata = metadata.to_map(stream.metadata)
+           
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream_views('savedQuery','opportunities',service, stream)
+
+        elif stream.tap_stream_id == "view_personal_opportunities":
+            stream.views = get_views_by_metadata(stream.metadata)
+            for stream_catalog in catalog.streams:
+                if stream_catalog.tap_stream_id == "opportunities":
+                    stream.metadata = stream_catalog.metadata
+                    stream.key_properties = stream_catalog.key_properties
+            mdata = metadata.to_map(stream.metadata)
+           
+            update_current_stream(state, stream.tap_stream_id)
+            sync_stream_views('userQuery','opportunities',service, stream)
                      
         else:  
             mdata = metadata.to_map(stream.metadata)

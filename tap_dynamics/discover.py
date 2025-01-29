@@ -165,6 +165,31 @@ def discover(service, get_lookup_tables):
                     metadata=create_metadata_views('personal',view_personal_contacts_data),
                 )
             )
+
+    LOGGER.info("Finding opportunities views")
+    view_opportunities_data = get_view_by_service('savedqueries','opportunity',service) 
+    if len(view_opportunities_data) > 0 : 
+        catalog.streams.append(
+                CatalogEntry(
+                    stream="view_opportunities",
+                    tap_stream_id="view_opportunities",
+                    key_properties=None,
+                    schema=create_views_schema('view_opportunities',view_opportunities_data),
+                    metadata=create_metadata_views('system',view_opportunities_data),
+                )
+            )
+    view_personal_opportunities_data = get_view_by_service('userqueries','opportunity',service) 
+    if len(view_personal_opportunities_data) > 0 : 
+        catalog.streams.append(
+                CatalogEntry(
+                    stream="view_personal_opportunities",
+                    tap_stream_id="view_personal_opportunities",
+                    key_properties=None,
+                    schema=create_views_schema('view_personal_opportunities',view_personal_opportunities_data),
+                    metadata=create_metadata_views('personal',view_personal_opportunities_data),
+                )
+            )
+
     
     return catalog
 
