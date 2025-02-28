@@ -209,7 +209,7 @@ def get_items_by_view(query_param,entity,service,views):
             while (len(view) == 5000):
                 x = 1
                 LOGGER.info('X is: %s', x)
-                view = query.raw({query_param: "{}".format(view_id)}, top=(5000 * x))
+                view = query.skip(x*5000).raw({query_param: "{}".format(view_id)})
                 dict_views[view_name].extend(view)
                 x += 1
             
