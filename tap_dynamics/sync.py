@@ -52,6 +52,8 @@ def sync_stream(service, catalog, state, start_date, stream, mdata):
 
     schema = stream.schema.to_dict()
 
+    LOGGER.info("Pagination mode")
+
     count = 0
     with metrics.http_request_timer(stream.tap_stream_id):
         with metrics.record_counter(stream.tap_stream_id) as counter:
@@ -80,6 +82,7 @@ def sync_stream(service, catalog, state, start_date, stream, mdata):
                     if count % 5000 == 0:
                         write_bookmark(state, stream_name, max_modified)
                 next_link = response.get('@odata.nextLink')
+                LOGGER.info("Next link: %s", next_link)
                 if not next_link:
                     break
                 query = service.query(entitycls, next_link)
