@@ -146,6 +146,7 @@ def sync(service, catalog, state, start_date):
             update_current_stream(state, stream.tap_stream_id)
             sync_stream_views('userQuery','contacts',service, stream)
         elif stream.tap_stream_id == "view_opportunities":
+            LOGGER.debug("JG View opportunities")
             stream.views = get_views_by_metadata(stream.metadata)
             for stream_catalog in catalog.streams:
                 if stream_catalog.tap_stream_id == "opportunities":
@@ -194,6 +195,8 @@ def get_items_by_view(query_param,entity,service,views):
     for view_name,view_id in views.items():
         try:
             view = query.raw({query_param: "{}".format(view_id)})
+            LOGGER.info("View found: %s", view_name)
+            LOGGER.info(view)
             dict_views[view_name]=view
         except:
             LOGGER.info("View not found: %s", view_id)
