@@ -157,6 +157,7 @@ def sync(service, catalog, state, start_date):
             sync_stream_views('savedQuery','opportunities',service, stream)
 
         elif stream.tap_stream_id == "view_personal_opportunities":
+            LOGGER.debug("JG View personal opportunities")
             stream.views = get_views_by_metadata(stream.metadata)
             for stream_catalog in catalog.streams:
                 if stream_catalog.tap_stream_id == "opportunities":
