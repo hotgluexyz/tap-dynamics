@@ -203,7 +203,7 @@ def get_items_by_view(query_param,entity,service,views):
             LOGGER.info("Query: %s", query)
             x = {query_param: "{}".format(view_id)}
             LOGGER.info("X: %s", x)
-            view = query.raw({query_param: "{}".format(view_id)})
+            view = query.raw({query_param: "{}".format(view_id)}).all()
             LOGGER.info("View found: %s", view_name)
             LOGGER.info(view)
             dict_views[view_name]=view
