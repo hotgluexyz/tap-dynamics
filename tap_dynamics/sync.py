@@ -190,38 +190,24 @@ def get_views_by_metadata(metadata):
 
 def get_items_by_view(query_param,entity,service,views):
     entitycls = service.entities[entity]
+    query = service.query(entitycls)
     dict_views = {}
-    
-    for view_name, view_id in views.items():
+    for view_name,view_id in views.items():
         try:
             LOGGER.info("View searching: %s", view_name)
             LOGGER.info("View id: %s", view_id)
-            
-            # Initialize query with the view filter
-            query = service.query(entitycls)
-            query = query.raw({query_param: "{}".format(view_id)})
-            all_records = []
-            
-            while True:
-                response = query.get_raw()
-                records = response.get('value', [])
-                all_records.extend(records)
-                
-                # Check for next page
-                next_link = response.get('@odata.nextLink')
-                LOGGER.info("Next link: %s", next_link)
-                
-                if not next_link:
-                    break
-                    
-                # Update query for next page
-                query = service.query(entitycls, next_link)
-            
-            LOGGER.info("View found: %s with %d records", view_name, len(all_records))
-            dict_views[view_name] = all_records
-            
-        except Exception as e:
-            LOGGER.error("Error fetching view %s: %s", view_id, str(e))
+            LOGGER.info("Query param: %s", query_param)
+            LOGGER.info("Entity: %s", entity)
+            LOGGER.info("Service: %s", service)
+            LOGGER.info("Views: %s", views)
+            LOGGER.info("Query: %s", query)
+            x = {query_param: "{}".format(view_id)}
+            LOGGER.info("X: %s", x)
+            view = query.raw({query_param: "{}".format(view_id)})
+            LOGGER.info("View found: %s", view_name)
+            LOGGER.info(view)
+            dict_views[view_name]=view
+        except:
             LOGGER.info("View not found: %s", view_id)
         
     return dict_views
