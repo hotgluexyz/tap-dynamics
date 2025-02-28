@@ -194,6 +194,9 @@ def get_items_by_view(query_param,entity,service,views):
     dict_views = {}
     for view_name,view_id in views.items():
         try:
+            LOGGER.info("View searching: %s", view_name)
+            LOGGER.info("View id: %s", view_id)
+            LOGGER.info("Query param: %s", query_param)
             view = query.raw({query_param: "{}".format(view_id)})
             LOGGER.info("View found: %s", view_name)
             LOGGER.info(view)
