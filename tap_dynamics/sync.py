@@ -214,8 +214,9 @@ def get_items_by_view(query_param,entity,service,views):
                 dict_views[view_name].extend(view)
                 x += 1
             
-        except:
+        except Exception as e:
             LOGGER.info("View not found: %s", view_id)
+            LOGGER.info("Error: %s", e)
         
     return dict_views
 
