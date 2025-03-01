@@ -205,6 +205,8 @@ def get_items_by_view(query_param,entity,service,views):
             LOGGER.info("X: %s", x)
             LOGGER.info("View found: %s", view_name)
             view = query.raw({query_param: "{}".format(view_id)})
+            next_link = view.get('@odata.nextLink')
+            LOGGER.info("Next link: %s", next_link)
             dict_views[view_name]=view
             while (len(view) == 5000):
                 x = 1
