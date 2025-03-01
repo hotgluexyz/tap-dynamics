@@ -210,7 +210,7 @@ def get_items_by_view(query_param,entity,service,views):
                 x = 1
                 LOGGER.info('X is: %s', x)
                 query = service.query(entitycls)
-                view = query.skip(x*5000).raw({query_param: "{}".format(view_id)})
+                view = query.raw({query_param: "{}".format(view_id), "$skip": x*5000})
                 dict_views[view_name].extend(view)
                 x += 1
             
