@@ -215,7 +215,7 @@ def get_items_by_view(query_param,entity,service,views):
             while (len(view) == 5000):
                 x = 1
                 LOGGER.info('X is: %s', x)
-                base_query["$skipToken"] = view[-1]['opportunityid']
+                base_query["$skipToken"] = "opportunityid:{}".format(view[-1]['opportunityid'])
                 LOGGER.info('Base query is: %s', base_query)
                 view = query.raw(base_query)
                 dict_views[view_name].extend(view)
