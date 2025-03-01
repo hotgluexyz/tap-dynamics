@@ -212,9 +212,7 @@ def get_items_by_view(query_param,entity,service,views):
 
             view = query.raw(base_query)
 
-            json = view.json()
-            LOGGER.info('View is: %s', view)
-            LOGGER.info('Json is: %s', json)
+            LOGGER.info(view)
 
             dict_views[view_name]=view
             while (len(view) == 5000):
