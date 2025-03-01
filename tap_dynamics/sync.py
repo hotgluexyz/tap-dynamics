@@ -211,6 +211,11 @@ def get_items_by_view(query_param,entity,service,views):
             }
 
             view = query.raw(base_query)
+
+            json = view.json()
+            LOGGER.info('View is: %s', view)
+            LOGGER.info('Json is: %s', json)
+
             dict_views[view_name]=view
             while (len(view) == 5000):
                 x = 1
@@ -218,6 +223,7 @@ def get_items_by_view(query_param,entity,service,views):
                 base_query["$skiptoken"] = "opportunityid:'{}'".format(view[-1]['opportunityid'])
                 LOGGER.info('Base query is: %s', base_query)
                 view = query.raw(base_query)
+               
                 dict_views[view_name].extend(view)
                 x += 1
             
