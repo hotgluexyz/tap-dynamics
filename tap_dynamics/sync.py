@@ -3,7 +3,7 @@ from datetime import datetime
 import singer
 from singer import metrics, metadata, Transformer
 from singer.bookmarks import set_currently_syncing
-
+from urllib.parse import urlparse, parse_qs
 from tap_dynamics.discover import discover
 
 LOGGER = singer.get_logger()
@@ -25,6 +25,18 @@ def write_bookmark(state, stream_name, value):
 def write_schema(stream):
     schema = stream.schema.to_dict()
     singer.write_schema(stream.tap_stream_id, schema, stream.key_properties)
+
+
+def get_raw_odata_response(query, query_params):
+    url = query.entity.__odata_url__()
+    response_data = query.connection.execute_get(url, params=query_params)
+    return response_data or {}
+
+def get_skiptoken(url):
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    skiptoken = query_params.get('$skiptoken', [None])[0]
+    return skiptoken
 
 
 def sync_stream(service, catalog, state, start_date, stream, mdata):
@@ -201,19 +213,22 @@ def get_items_by_view(query_param,entity,service,views):
                 "$orderby": "opportunityid"
             }
 
-            view = query.raw(base_query)
 
-            LOGGER.info(view)
+            view_response = get_raw_odata_response(query, base_query)
+            view_items = view_response.get('value')
+            next_link = view_response.get('@odata.nextLink')
 
-            dict_views[view_name]=view
-            while (len(view) == 5000):
+            dict_views[view_name]=view_items
+            while next_link:
                 x = 1
                 LOGGER.info('X is: %s', x)
-                base_query["$skiptoken"] = "opportunityid:'{}'".format(view[-1]['opportunityid'])
+                skip_token = get_skiptoken(next_link)
+                base_query["$skiptoken"] = skip_token
                 LOGGER.info('Base query is: %s', base_query)
-                view = query.raw(base_query)
-               
-                dict_views[view_name].extend(view)
+                view_response = get_raw_odata_response(query, base_query)
+                next_link = view_response.get('@odata.nextLink')
+                view_items = view_response.get('value')
+                dict_views[view_name].extend(view_items)
                 x += 1
             
         except Exception as e:
