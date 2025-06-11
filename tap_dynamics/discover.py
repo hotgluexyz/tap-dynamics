@@ -165,7 +165,7 @@ def discover(service, get_lookup_tables):
                     )
                 )
         
-        return catalog
+    return catalog
 
 
 def get_view_by_service(entity, name, service):
