@@ -116,51 +116,55 @@ def discover(service, get_lookup_tables):
             )
         )
     
-    view_leads_data = get_view_by_service('savedqueries','lead',service) 
-    if len(view_leads_data) > 0 : 
-        catalog.streams.append(
-                CatalogEntry(
-                    stream="view_leads",
-                    tap_stream_id="view_leads",
-                    key_properties=None,
-                    schema=create_views_schema('view_leads',view_leads_data),
-                    metadata=create_metadata_views('system',view_leads_data),
+
+    if "leads" in service.entities:
+        view_leads_data = get_view_by_service('savedqueries','lead',service) 
+        if len(view_leads_data) > 0 : 
+            catalog.streams.append(
+                    CatalogEntry(
+                        stream="view_leads",
+                        tap_stream_id="view_leads",
+                        key_properties=None,
+                        schema=create_views_schema('view_leads',view_leads_data),
+                        metadata=create_metadata_views('system',view_leads_data),
+                    )
                 )
-            )
-    view_personal_leads_data = get_view_by_service('userqueries','lead',service) 
-    if len(view_personal_leads_data) > 0 : 
-        catalog.streams.append(
-                CatalogEntry(
-                    stream="view_personal_leads",
-                    tap_stream_id="view_personal_leads",
-                    key_properties=None,
-                    schema=create_views_schema('view_personal_leads',view_personal_leads_data),
-                    metadata=create_metadata_views('personal',view_personal_leads_data),
-                )
-            )
-    view_contacts_data = get_view_by_service('savedqueries','contact',service)
-    if len(view_contacts_data) > 0 : 
-        catalog.streams.append(
-                CatalogEntry(
-                    stream="view_contacts",
-                    tap_stream_id="view_contacts",
-                    key_properties=None,
-                    schema=create_views_schema('view_contacts',view_contacts_data),
-                    metadata=create_metadata_views('system',view_contacts_data),
-                )
-            )
-    view_personal_contacts_data = get_view_by_service('userqueries','contact',service) 
-    if len(view_personal_contacts_data) > 0:
-        catalog.streams.append(
-                CatalogEntry(
-                    stream="view_personal_contacts",
-                    tap_stream_id="view_personal_contacts",
-                    key_properties=None,
-                    schema=create_views_schema('view_personal_contacts',view_personal_contacts_data),
-                    metadata=create_metadata_views('personal',view_personal_contacts_data),
-                )
+        view_personal_leads_data = get_view_by_service('userqueries','lead',service) 
+        if len(view_personal_leads_data) > 0 : 
+            catalog.streams.append(
+                    CatalogEntry(
+                        stream="view_personal_leads",
+                        tap_stream_id="view_personal_leads",
+                        key_properties=None,
+                        schema=create_views_schema('view_personal_leads',view_personal_leads_data),
+                        metadata=create_metadata_views('personal',view_personal_leads_data),
+                    )
             )
     
+    if "contacts" in service.entities:
+        view_contacts_data = get_view_by_service('savedqueries','contact',service)
+        if len(view_contacts_data) > 0 : 
+            catalog.streams.append(
+                    CatalogEntry(
+                        stream="view_contacts",
+                        tap_stream_id="view_contacts",
+                        key_properties=None,
+                        schema=create_views_schema('view_contacts',view_contacts_data),
+                        metadata=create_metadata_views('system',view_contacts_data),
+                    )
+                )
+        view_personal_contacts_data = get_view_by_service('userqueries','contact',service) 
+        if len(view_personal_contacts_data) > 0:
+            catalog.streams.append(
+                    CatalogEntry(
+                        stream="view_personal_contacts",
+                        tap_stream_id="view_personal_contacts",
+                        key_properties=None,
+                        schema=create_views_schema('view_personal_contacts',view_personal_contacts_data),
+                        metadata=create_metadata_views('personal',view_personal_contacts_data),
+                    )
+                )
+        
     return catalog
 
 
