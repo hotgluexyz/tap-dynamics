@@ -60,8 +60,9 @@ def get_navigation_properties(entity):
     return navigation_properties
 
 
-def discover(service, get_lookup_tables):
+def discover(service, get_lookup_tables, get_saved_queries, get_all_tables):
     catalog = Catalog([])
+
     selected_tables = [
         "accounts",
         "campaigns",
@@ -88,7 +89,6 @@ def discover(service, get_lookup_tables):
         "msdyncrm_msdyncrm_linkedinlms_fieldmappingset",
     ]
 
-
     if get_lookup_tables:
         extra_tables = []
         for entity_name in service.entities.keys():
@@ -98,8 +98,11 @@ def discover(service, get_lookup_tables):
         selected_tables += extra_tables
                     
     for entity_name, entity in service.entities.items():
-        if entity_name not in selected_tables:
+
+        # keep old behavior of only including selected tables
+        if not get_all_tables and entity_name not in selected_tables:
             continue
+        
         schema_dict, metadata, pks = get_schema(entity)
         metadata.append({"breadcrumb": [], "metadata": {"selected": True}})
         schema = Schema.from_dict(schema_dict)
@@ -116,54 +119,55 @@ def discover(service, get_lookup_tables):
             )
         )
     
-
-    if "leads" in service.entities:
-        view_leads_data = get_view_by_service('savedqueries','lead',service) 
-        if len(view_leads_data) > 0 : 
-            catalog.streams.append(
-                    CatalogEntry(
-                        stream="view_leads",
-                        tap_stream_id="view_leads",
-                        key_properties=None,
-                        schema=create_views_schema('view_leads',view_leads_data),
-                        metadata=create_metadata_views('system',view_leads_data),
+    # get saved queries and user queries for leads and contacts, if enabled (true as default)
+    if get_saved_queries:
+        if "leads" in service.entities:
+            view_leads_data = get_view_by_service('savedqueries','lead',service) 
+            if len(view_leads_data) > 0 : 
+                catalog.streams.append(
+                        CatalogEntry(
+                            stream="view_leads",
+                            tap_stream_id="view_leads",
+                            key_properties=None,
+                            schema=create_views_schema('view_leads',view_leads_data),
+                            metadata=create_metadata_views('system',view_leads_data),
+                        )
                     )
+            view_personal_leads_data = get_view_by_service('userqueries','lead',service) 
+            if len(view_personal_leads_data) > 0 : 
+                catalog.streams.append(
+                        CatalogEntry(
+                            stream="view_personal_leads",
+                            tap_stream_id="view_personal_leads",
+                            key_properties=None,
+                            schema=create_views_schema('view_personal_leads',view_personal_leads_data),
+                            metadata=create_metadata_views('personal',view_personal_leads_data),
+                        )
                 )
-        view_personal_leads_data = get_view_by_service('userqueries','lead',service) 
-        if len(view_personal_leads_data) > 0 : 
-            catalog.streams.append(
-                    CatalogEntry(
-                        stream="view_personal_leads",
-                        tap_stream_id="view_personal_leads",
-                        key_properties=None,
-                        schema=create_views_schema('view_personal_leads',view_personal_leads_data),
-                        metadata=create_metadata_views('personal',view_personal_leads_data),
+        
+        if "contacts" in service.entities:
+            view_contacts_data = get_view_by_service('savedqueries','contact',service)
+            if len(view_contacts_data) > 0 : 
+                catalog.streams.append(
+                        CatalogEntry(
+                            stream="view_contacts",
+                            tap_stream_id="view_contacts",
+                            key_properties=None,
+                            schema=create_views_schema('view_contacts',view_contacts_data),
+                            metadata=create_metadata_views('system',view_contacts_data),
+                        )
                     )
-            )
-    
-    if "contacts" in service.entities:
-        view_contacts_data = get_view_by_service('savedqueries','contact',service)
-        if len(view_contacts_data) > 0 : 
-            catalog.streams.append(
-                    CatalogEntry(
-                        stream="view_contacts",
-                        tap_stream_id="view_contacts",
-                        key_properties=None,
-                        schema=create_views_schema('view_contacts',view_contacts_data),
-                        metadata=create_metadata_views('system',view_contacts_data),
+            view_personal_contacts_data = get_view_by_service('userqueries','contact',service) 
+            if len(view_personal_contacts_data) > 0:
+                catalog.streams.append(
+                        CatalogEntry(
+                            stream="view_personal_contacts",
+                            tap_stream_id="view_personal_contacts",
+                            key_properties=None,
+                            schema=create_views_schema('view_personal_contacts',view_personal_contacts_data),
+                            metadata=create_metadata_views('personal',view_personal_contacts_data),
+                        )
                     )
-                )
-        view_personal_contacts_data = get_view_by_service('userqueries','contact',service) 
-        if len(view_personal_contacts_data) > 0:
-            catalog.streams.append(
-                    CatalogEntry(
-                        stream="view_personal_contacts",
-                        tap_stream_id="view_personal_contacts",
-                        key_properties=None,
-                        schema=create_views_schema('view_personal_contacts',view_personal_contacts_data),
-                        metadata=create_metadata_views('personal',view_personal_contacts_data),
-                    )
-                )
         
     return catalog
 

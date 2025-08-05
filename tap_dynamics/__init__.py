@@ -23,7 +23,7 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def do_discover(service, get_lookup_tables):
+def do_discover(service, get_lookup_tables, get_saved_queries, get_all_tables):
     LOGGER.info("Testing authentication")
     try:
         pass  ## TODO: test authentication
@@ -31,7 +31,7 @@ def do_discover(service, get_lookup_tables):
         raise Exception("Error testing Dynamics authentication")
 
     LOGGER.info("Starting discover")
-    catalog = discover(service, get_lookup_tables)
+    catalog = discover(service, get_lookup_tables, get_saved_queries, get_all_tables)
     return catalog
 
 
@@ -105,9 +105,11 @@ def main():
         session = session
     )
     get_lookup_tables = parsed_args.config.get("get_lookup_tables", False)
-    catalog = parsed_args.catalog or do_discover(service, get_lookup_tables)
+    get_all_tables = parsed_args.config.get("get_all_tables", False)
+    get_saved_queries = parsed_args.config.get("get_saved_queries", True)
+    catalog = parsed_args.catalog or do_discover(service, get_lookup_tables, get_saved_queries, get_all_tables)
     if parsed_args.discover:
-        json.dump(catalog.to_dict(), sys.stdout, indent=2)
+        json.dump(catalog.to_dict(), sys.stdout)
 
     else:
         sync(
