@@ -24,6 +24,21 @@ tap-dynamics -c config.json
   "client_id": "<client_id>",
   "client_secret": "<client_secret>",
   "redirect_uri": "<redirect_url>",
-  "refresh_token": "<refresh_token>"
+  "refresh_token": "<refresh_token>",
+  "get_all_tables": false,
+  "get_saved_queries": false,
+  "get_lookup_tables": false
 }
 ```
+
+### Configuration Options
+
+- `start_date`: The start date for data extraction (required)
+- `domain`: Your Dynamics 365 CRM domain (required)
+- `client_id`: OAuth client ID (required)
+- `client_secret`: OAuth client secret (required)
+- `redirect_uri`: OAuth redirect URI (required)
+- `refresh_token`: OAuth refresh token (required)
+- `get_all_tables`: When `true`, discovers and includes all available tables in the catalog. When `false` (default), only includes a predefined set of selected tables.
+- `get_saved_queries`: When `true`(default), includes saved queries and user queries for leads and contacts as additional streams. When `false`, these query streams are not included.
+- `get_lookup_tables`: When `true`, includes lookup tables (tables with "lkup" in their name) in addition to the predefined selected tables. This is not necessary when `get_all_tables` is `true` since all tables will already be included.
